@@ -2179,7 +2179,7 @@ const WorkflowHistoryPage = () => {
                                     <FaProjectDiagram /> Trilha do Workflow
                                 </span>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
+                            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar space-y-2">
                                 {flowPipelineSteps.length === 0 ? (
                                     <div className="text-center py-16 text-slate-400 italic text-xs">
                                         Carregando etapas do fluxo...
@@ -2223,7 +2223,7 @@ const WorkflowHistoryPage = () => {
                                                                 ? "Clique para mostrar documentos concluídos" 
                                                                 : `Clique para filtrar por ${step.name}`
                                                     }
-                                                    className={`w-full p-3 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-150 relative ${
+                                                    className={`w-full p-2 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-150 relative ${
                                                         isSelected
                                                             ? isCompletedStep 
                                                                 ? 'bg-emerald-50/60 border-emerald-400 ring-2 ring-emerald-500/20 shadow-md' 
@@ -2241,7 +2241,7 @@ const WorkflowHistoryPage = () => {
                                                 >
                                                     {/* Step Name Row */}
                                                     <div className="flex items-center gap-2">
-                                                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                                                             isCompletedStep 
                                                                 ? 'bg-emerald-500 text-white' 
                                                                 : isStartStep
@@ -2259,7 +2259,7 @@ const WorkflowHistoryPage = () => {
 
                                                     {/* Extra stats: avg wait time & document count */}
                                                     {((!isCompletedStep && hasActiveDocs && step.avgTimeText !== '-') || step.count > 0) && (
-                                                        <div className="mt-2 flex items-center justify-between w-full text-[10px] font-bold text-slate-500 gap-1.5">
+                                                        <div className="mt-1 flex items-center justify-between w-full text-[10px] font-bold text-slate-500 gap-1.5">
                                                             {/* Average wait time */}
                                                             <div>
                                                                 {!isCompletedStep && hasActiveDocs && step.avgTimeText !== '-' && (
@@ -2286,8 +2286,8 @@ const WorkflowHistoryPage = () => {
 
                                                 {/* Down connector arrow */}
                                                 {!isLast && (
-                                                    <div className="my-1.5 text-slate-300">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-5 h-5">
+                                                    <div className="my-0.5 text-slate-300">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
                                                         </svg>
                                                     </div>
