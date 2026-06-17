@@ -78,8 +78,10 @@ api.interceptors.response.use(
 
                 return api(originalRequest);
             } catch (refreshError) {
-                console.error('[api.js] Token refresh failed. Redirecting to login.');
-                window.location.href = '/login';
+                console.error('[api.js] Token refresh failed.');
+                if (!window.location.pathname.includes('workflow-diagram')) {
+                    window.location.href = '/login';
+                }
                 return Promise.reject(refreshError);
             }
         }

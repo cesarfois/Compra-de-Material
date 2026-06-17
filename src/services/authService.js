@@ -267,7 +267,9 @@ export const authService = {
                         return api(originalRequest);
                     } catch (refreshError) {
                         // Refresh failed, redirect to login
-                        window.location.href = '/login';
+                        if (!window.location.pathname.includes('workflow-diagram')) {
+                            window.location.href = '/login';
+                        }
                         return Promise.reject(refreshError);
                     }
                 }
