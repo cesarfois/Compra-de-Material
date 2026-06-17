@@ -1486,7 +1486,7 @@ const WorkflowHistoryPage = () => {
                 'Tempo Parado',
                 'Comentários',
                 'Valor',
-                'Data Realização'
+                'Previsão'
             ];
 
             const rows = filteredAndSortedDocuments.map(doc => {
@@ -1509,7 +1509,7 @@ const WorkflowHistoryPage = () => {
                     'Tempo Parado': timeStopped,
                     'Comentários': comments,
                     'Valor': getDocFieldValue(doc, 'MATRICULA') || '',
-                    'Data Realização': getDocumentRealizationDate(doc) ? formatDate(getDocumentRealizationDate(doc), true) : ''
+                    'Previsão': getDocumentRealizationDate(doc) ? formatDate(getDocumentRealizationDate(doc), true) : ''
                 };
             });
 
@@ -1818,7 +1818,7 @@ const WorkflowHistoryPage = () => {
                                                     Valor {sortField === 'matricula' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
                                                 </th>
                                                 <th className="py-3 px-2 text-left cursor-pointer hover:bg-slate-100 select-none transition-colors" onClick={() => handleSort('dataRealizacao')}>
-                                                    Data Realização {sortField === 'dataRealizacao' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                                                    Previsão {sortField === 'dataRealizacao' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
                                                 </th>
                                                 <th className="py-3 px-1 text-center w-[38px]" title="Histórico">
                                                     <FaHistory className="mx-auto text-slate-400" />
