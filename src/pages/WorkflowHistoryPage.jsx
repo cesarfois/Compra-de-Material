@@ -924,8 +924,9 @@ const WorkflowHistoryPage = () => {
                             }
 
                             if (!isFinished && activeNode) {
-                                const activeStep = analyzedHistory.find(step => step.isActive || (!step.decision && step.name === activeNode.name));
-                                const activeStart = activeStep ? activeStep.startedAt : (activeNode.executions[0]?.startedAt || null);
+                                // Search backwards to find the most recent entry for this active node in the history steps
+                                const activeStep = [...analyzedHistory].reverse().find(step => step.isActive || (!step.decision && step.name === activeNode.name));
+                                const activeStart = activeStep ? activeStep.startedAt : (activeNode.executions[activeNode.executions.length - 1]?.startedAt || null);
                                 if (activeStart) {
                                     timeStoppedMs = Math.max(0, new Date().getTime() - new Date(activeStart).getTime());
                                 }
@@ -1523,7 +1524,7 @@ const WorkflowHistoryPage = () => {
                 'Requerente',
                 'Etapa Atual',
                 'Responsável',
-                'Tempo Parado',
+                'Tempo na Tarefa',
                 'Comentários',
                 'Valor',
                 'Previsão'
@@ -1546,7 +1547,7 @@ const WorkflowHistoryPage = () => {
                     'Requerente': getDocFieldValue(doc, 'REQUERENTE') || '',
                     'Etapa Atual': prog.activeTaskName || '',
                     'Responsável': prog.responsible && prog.responsible !== '-' ? prog.responsible : '',
-                    'Tempo Parado': timeStopped,
+                    'Tempo na Tarefa': timeStopped,
                     'Comentários': comments,
                     'Valor': getDocFieldValue(doc, 'MATRICULA') || '',
                     'Previsão': getDocumentRealizationDate(doc) ? formatDate(getDocumentRealizationDate(doc), true) : ''
@@ -1841,9 +1842,9 @@ const WorkflowHistoryPage = () => {
                                 <FaBan className="text-xl" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Atrasados</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate">Tarefas &gt; 24h</div>
                                 <div className="text-2xl font-black text-rose-600 mt-0.5 font-mono">{kpis.delayed}</div>
-                                <div className="text-[10px] text-rose-500 mt-0.5 font-semibold truncate">Parados &gt;24h</div>
+                                <div className="text-[10px] text-rose-500 mt-0.5 font-semibold truncate">Tempo na etapa atual</div>
                             </div>
                         </div>
 
@@ -1961,7 +1962,7 @@ const WorkflowHistoryPage = () => {
                                                     {renderFilterDropdown('responsible', 'Responsável', filterResponsible, setFilterResponsible, searchResponsible, setSearchResponsible, uniqueResponsibles)}
                                                 </th>
                                                 <th className="py-3 px-2 text-left cursor-pointer hover:bg-slate-100 select-none transition-colors" onClick={() => handleSort('timeStoppedMs')}>
-                                                    Tempo Parado {sortField === 'timeStoppedMs' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                                                    Tempo na Tarefa {sortField === 'timeStoppedMs' ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
                                                 </th>
                                                 <th className="py-3 px-2 text-left select-none whitespace-nowrap">
                                                     <span>
