@@ -249,6 +249,11 @@ const proxyOptions = {
     onProxyRes: (proxyRes, req, res) => {
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] [Proxy] 📥 Response ${proxyRes.statusCode} for ${req.method} ${req.url}`);
+        
+        // Remove WWW-Authenticate to prevent browser from showing native basic auth login prompt
+        if (proxyRes.headers['www-authenticate']) {
+            delete proxyRes.headers['www-authenticate'];
+        }
     },
 
     /**
