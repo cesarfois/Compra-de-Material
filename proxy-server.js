@@ -214,57 +214,59 @@ const proxyOptions = {
     secure: false, // Don't verify SSL certificates (DocuWare Cloud might need this if using self-signed locally, but usually false for proxying)
     timeout: 300000,
     proxyTimeout: 300000,
-    /**
-     * @function onProxyReq
-     * @description Request Interceptor.
-     * Cleans up the request before sending it to the final destination.
-     */
-    onProxyReq: (proxyReq, req, res) => {
-        const target = req.headers['x-target-url'];
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] [Proxy] 📤 Forwarding ${req.method} ${req.originalUrl} -> ${target}`);
+    on: {
+        /**
+         * @function proxyReq
+         * @description Request Interceptor.
+         * Cleans up the request before sending it to the final destination.
+         */
+        proxyReq: (proxyReq, req, res) => {
+            const target = req.headers['x-target-url'];
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] [Proxy] 📤 Forwarding ${req.method} ${req.originalUrl} -> ${target}`);
 
-        if (target) {
-            // Rewrite Origin and Referer to match the target to satisfy WCF/CORS checks
-            proxyReq.setHeader('Origin', target);
-            proxyReq.setHeader('Referer', target + '/');
+            if (target) {
+                // Rewrite Origin and Referer to match the target to satisfy WCF/CORS checks
+                proxyReq.setHeader('Origin', target);
+                proxyReq.setHeader('Referer', target + '/');
+            }
+
+            // Cleanliness: Remove browser-specific metadata that might trigger WAFs when Origin is rewritten
+            proxyReq.removeHeader('x-target-url');
+            proxyReq.removeHeader('cookie');
+            proxyReq.removeHeader('sec-fetch-dest');
+            proxyReq.removeHeader('sec-fetch-mode');
+            proxyReq.removeHeader('sec-fetch-site');
+            proxyReq.removeHeader('sec-fetch-user');
+        },
+
+        /**
+         * @function proxyRes
+         * @description Response Interceptor.
+         * Logs the status code received from the upstream server.
+         */
+        proxyRes: (proxyRes, req, res) => {
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] [Proxy] 📥 Response ${proxyRes.statusCode} for ${req.method} ${req.url}`);
+            
+            // Remove WWW-Authenticate to prevent browser from showing native basic auth login prompt
+            if (proxyRes.headers['www-authenticate']) {
+                delete proxyRes.headers['www-authenticate'];
+            }
+        },
+
+        /**
+         * @function error
+         * @description Global Error Handler for the Proxy.
+         * Catches network errors (e.g., DNS failure, Connection Refused) and sends a JSON response.
+         */
+        error: (err, req, res) => {
+            const timestamp = new Date().toISOString();
+            console.error(`[${timestamp}] [Proxy] ❌ Error:`, err.message);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Proxy Error', details: err.message });
+            }
         }
-
-        // Cleanliness: Remove browser-specific metadata that might trigger WAFs when Origin is rewritten
-        proxyReq.removeHeader('x-target-url');
-        proxyReq.removeHeader('cookie');
-        proxyReq.removeHeader('sec-fetch-dest');
-        proxyReq.removeHeader('sec-fetch-mode');
-        proxyReq.removeHeader('sec-fetch-site');
-        proxyReq.removeHeader('sec-fetch-user');
-
-        // Optional: Remove Sec-Ch-Ua if strict UA filtering is suspected, but usually browser UAs are fine.
-    },
-
-    /**
-     * @function onProxyRes
-     * @description Response Interceptor.
-     * Logs the status code received from the upstream server.
-     */
-    onProxyRes: (proxyRes, req, res) => {
-        const timestamp = new Date().toISOString();
-        console.log(`[${timestamp}] [Proxy] 📥 Response ${proxyRes.statusCode} for ${req.method} ${req.url}`);
-        
-        // Remove WWW-Authenticate to prevent browser from showing native basic auth login prompt
-        if (proxyRes.headers['www-authenticate']) {
-            delete proxyRes.headers['www-authenticate'];
-        }
-    },
-
-    /**
-     * @function onError
-     * @description Global Error Handler for the Proxy.
-     * Catches network errors (e.g., DNS failure, Connection Refused) and sends a JSON response.
-     */
-    onError: (err, req, res) => {
-        const timestamp = new Date().toISOString();
-        console.error(`[${timestamp}] [Proxy] ❌ Error:`, err.message);
-        res.status(500).json({ error: 'Proxy Error', details: err.message });
     }
 };
 
