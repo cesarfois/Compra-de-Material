@@ -148,25 +148,8 @@ export const scheduler = {
     },
 
     startTask: (schedule) => {
-        if (!cron.validate(schedule.cronExpression)) {
-            console.error(`[Scheduler] Invalid cron expression for ${schedule.name}`);
-            return;
-        }
-        console.log(`[Scheduler] Starting task: ${schedule.name} (${schedule.cronExpression})`);
-
-        const task = cron.schedule(schedule.cronExpression, async () => {
-            console.log(`[Scheduler] ⏰ Triggering export for: ${schedule.name}`);
-            await scheduler.log(schedule.id, schedule.name, 'RUNNING', 'Iniciando exportação...');
-            try {
-                const result = await executeExport(schedule, false); // isManual = false
-                await scheduler.log(schedule.id, schedule.name, 'SUCCESS', `Sucesso. ${result.docCount} docs com ${result.lineCount} linhas.`);
-                console.log(`[Scheduler] ✅ Export completed: ${schedule.name}`);
-            } catch (error) {
-                await scheduler.log(schedule.id, schedule.name, 'ERROR', `Falha: ${error.message}`);
-                console.error(`[Scheduler] ❌ Export failed for ${schedule.name}:`, error.message);
-            }
-        });
-        tasks.set(schedule.id, task);
+        console.log(`[Scheduler] Background task scheduling is DISABLED for: ${schedule.name}`);
+        return;
     },
 
     stopTask: (id) => {
