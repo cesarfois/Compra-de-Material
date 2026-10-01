@@ -5,6 +5,11 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import pdfParse from 'pdf-parse';
+import OpenAI from 'openai';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Initialize Express App
 const app = express();
@@ -437,6 +442,83 @@ app.delete('/api/exports/delete', async (req, res) => {
     } catch (err) {
         console.error('[Exports] Delete error:', err.message);
         res.status(err.message.includes('inválido') ? 403 : 500).json({ error: err.message });
+    }
+});
+
+/**
+ * POST /api/ai/analyze-document
+ * Receives a PDF file, extracts text, and sends it to OpenAI to generate a summary.
+ */
+app.post('/api/ai/analyze-document', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+        }
+
+        console.log(`[AI] Iniciando extração de texto do arquivo: ${req.file.originalname} (${req.file.size} bytes)`);
+        
+        let textContent = '';
+        if (req.file.mimetype === 'application/pdf') {
+            const pdfData = await pdfParse(req.file.buffer);
+            textContent = pdfData.text;
+        } else {
+            // Se for texto plano
+            textContent = req.file.buffer.toString('utf8');
+        }
+
+        if (!textContent || textContent.trim() === '') {
+            return res.status(400).json({ error: 'Não foi possível extrair texto do documento.' });
+        }
+
+        console.log(`[AI] Texto extraído (${textContent.length} caracteres). Enviando para a OpenAI...`);
+        
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: 'A chave da API da OpenAI (OPENAI_API_KEY) não está configurada no servidor.' });
+        }
+
+        const openai = new OpenAI({ apiKey });
+        
+        const prompt = `Analise o documento de Pedido de Compra de Material abaixo e gere um resumo claro, objetivo e fácil de ler. 
+
+O resumo deve priorizar e conter as seguintes informações, quando disponíveis no texto:
+* Referência do pedido (ex: PCM.2026/0125)
+* Requerente (quem solicitou)
+* Descrição resumida do que está sendo solicitado
+* Material ou materiais principais solicitados (com quantidades, se disponíveis)
+* Fornecedor, quando identificado
+* Valor estimado do pedido (Se não for possível determinar com certeza, responda: "Valor estimado: Não identificado no documento", e não tente calcular o valor)
+* Moeda
+* Justificativa ou finalidade da compra, quando existir
+
+Atenção: O formato deve ser parecido com este exemplo:
+Pedido PCM.2026/0125
+Solicitação realizada por João Silva para aquisição de materiais destinados à manutenção dos equipamentos da oficina.
+O pedido contempla principalmente filtros, correias e componentes de manutenção preventiva.
+Fornecedor: Empresa XYZ
+Valor estimado: 8.450.000 KZ
+A compra está relacionada à manutenção preventiva dos equipamentos da área técnica.
+
+Caso o valor não possa ser determinado, não tente adivinhar. Apenas indique que não foi identificado.
+Aqui está o conteúdo extraído do documento:
+"""
+${textContent.substring(0, 15000)}
+"""`;
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.2,
+        });
+
+        const summary = response.choices[0]?.message?.content;
+        
+        console.log('[AI] Resumo gerado com sucesso.');
+        res.json({ summary });
+
+    } catch (err) {
+        console.error('[AI] Erro na análise do documento:', err);
+        res.status(500).json({ error: 'Falha na análise do documento: ' + err.message });
     }
 });
 

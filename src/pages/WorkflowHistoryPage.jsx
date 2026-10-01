@@ -25,6 +25,8 @@ import {
 import { workflowAnalyticsService } from '../services/workflowAnalyticsService';
 import { docuwareService } from '../services/docuwareService';
 import { copyToClipboard } from '../utils/clipboard';
+import VerificacaoTemporaria from '../components/Workflow/VerificacaoTemporaria';
+import { FaRobot } from 'react-icons/fa';
 
 // Workflow visual parsing/mapping imports
 import { WorkflowDefinitionParser } from '../services/workflow/WorkflowDefinitionParser';
@@ -360,6 +362,7 @@ const WorkflowHistoryPage = () => {
     const [isDiagramMaximized, setIsDiagramMaximized] = useState(false);
     const [error, setError] = useState(null);
     const [searched, setSearched] = useState(false);
+    const [mainTab, setMainTab] = useState('geral');
 
     // Load Cabinets & Org ID on mount, supporting deep-linking from DocuWare tasks
     useEffect(() => {
@@ -882,20 +885,29 @@ const WorkflowHistoryPage = () => {
                              };
                             
                             const endNode = nodes.find(isEndNode);
-                            isFinished = endNode && endNode.status === 'completed';
+                            isFinished = (instance.Status === 2) || (instance.Status === 'Completed') || (endNode && endNode.status === 'completed');
+
+                            if (!isFinished && analyzedHistory.length > 0) {
+                                const lastStep = analyzedHistory[analyzedHistory.length - 1];
+                                if (lastStep.type && lastStep.type.toLowerCase().includes('end')) {
+                                    isFinished = true;
+                                }
+                            }
 
                             // Detect rejection/cancellation: check if any decision taken
-                            // in the history contains a rejection/cancellation keyword.
-                            // The End node is always "Final" (neutral), so we must look at
-                            // the decisions, not the terminal node name.
-                            if (isFinished) {
-                                const rejKw = ['recusad', 'cancelad', 'reprovad', 'rejeit', 'refused', 'reject'];
-                                const normalize = (s) => (s || '').toLowerCase()
-                                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-                                isRejected = analyzedHistory.some(step => {
-                                    const dec = normalize(step.decision || '');
-                                    return rejKw.some(kw => dec.includes(kw));
-                                });
+                            // or step name in the history contains a rejection/cancellation keyword.
+                            const rejKw = ['recus', 'cancel', 'reprov', 'rejeit', 'refuse', 'reject'];
+                            const normalize = (s) => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                            isRejected = analyzedHistory.some(step => {
+                                const dec = normalize(step.decision || '');
+                                const name = normalize(step.name || '');
+                                return rejKw.some(kw => dec.includes(kw) || name.includes(kw));
+                            });
+
+                            // If it's rejected/cancelled, consider it finished for the KPI dashboard
+                            // even if it's technically waiting at a final "Aviso" (Knowledge) step.
+                            if (isRejected) {
+                                isFinished = true;
                             }
 
                             const parseDWDate = (dateStr) => {
@@ -1701,6 +1713,33 @@ const WorkflowHistoryPage = () => {
                 </div>
             )}
 
+            {/* Navigation Tabs */}
+            <div className="flex gap-2 border-b border-slate-200 pb-0">
+                <button 
+                    onClick={() => setMainTab('geral')}
+                    className={`px-6 py-3 font-bold text-sm rounded-t-xl transition-all flex items-center gap-2 ${mainTab === 'geral' ? 'bg-[#4f46e5] text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'}`}
+                >
+                    <FaList className={mainTab === 'geral' ? 'text-white' : 'text-slate-400'} />
+                    Dashboard Geral
+                </button>
+                <button 
+                    onClick={() => setMainTab('verificacao')}
+                    className={`px-6 py-3 font-bold text-sm rounded-t-xl transition-all flex items-center gap-2 ${mainTab === 'verificacao' ? 'bg-[#4f46e5] text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'}`}
+                >
+                    <FaRobot className={mainTab === 'verificacao' ? 'text-white' : 'text-indigo-400'} />
+                    Verificação Temporária
+                </button>
+            </div>
+
+            {searched && mainTab === 'verificacao' && (
+                <VerificacaoTemporaria 
+                    documents={documents}
+                    documentProgress={documentProgress}
+                    selectedCabinet={selectedCabinet}
+                />
+            )}
+
+            <div className={mainTab === 'geral' ? 'space-y-6 block' : 'hidden'}>
             {/* Premium Filter Panel - Simplificado em linha unica */}
             <div className="card bg-white border border-slate-200 border-l-[6px] border-l-[#4f46e5] shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl">
                 <div className="card-body p-6">
@@ -2828,6 +2867,7 @@ const WorkflowHistoryPage = () => {
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

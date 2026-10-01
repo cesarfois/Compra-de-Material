@@ -71,6 +71,7 @@ jobs:
           echo "VITE_DOCUWARE_WORKFLOW_API_KEY length: ${#VITE_DOCUWARE_WORKFLOW_API_KEY}"
           echo "VITE_DOCUWARE_WORKFLOW_URL length: ${#VITE_DOCUWARE_WORKFLOW_URL}, value: ${VITE_DOCUWARE_WORKFLOW_URL:0:10}..."
           echo "DOCKERHUB_REPOSITORY_URI length: ${#DOCKERHUB_REPOSITORY_URI}, value: ${DOCKERHUB_REPOSITORY_URI}"
+          echo "OPENAI_API_KEY length: ${#OPENAI_API_KEY}, starts with: ${OPENAI_API_KEY:0:3}..."
         env:
           VITE_DOCUWARE_CLIENT_ID: ${{ secrets.VITE_DOCUWARE_CLIENT_ID }}
           VITE_DOCUWARE_CLIENT_SECRET: ${{ secrets.VITE_DOCUWARE_CLIENT_SECRET }}
@@ -80,6 +81,7 @@ jobs:
           VITE_DOCUWARE_WORKFLOW_API_KEY: ${{ secrets.VITE_DOCUWARE_WORKFLOW_API_KEY }}
           VITE_DOCUWARE_WORKFLOW_URL: ${{ secrets.VITE_DOCUWARE_WORKFLOW_URL }}
           DOCKERHUB_REPOSITORY_URI: ${{ secrets.DOCKERHUB_REPOSITORY_URI }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
@@ -94,6 +96,7 @@ jobs:
             DOCUWARE_ORG_ID=${{ secrets.DOCUWARE_ORG_ID }}
             VITE_DOCUWARE_WORKFLOW_API_KEY=${{ secrets.VITE_DOCUWARE_WORKFLOW_API_KEY }}
             VITE_DOCUWARE_WORKFLOW_URL=${{ secrets.VITE_DOCUWARE_WORKFLOW_URL }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
           tags: |
             ${{ secrets.DOCKERHUB_REPOSITORY_URI }}:prod-${{ env.VERSION }}
             ${{ secrets.DOCKERHUB_REPOSITORY_URI }}:prod-latest

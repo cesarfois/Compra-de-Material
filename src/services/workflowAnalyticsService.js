@@ -139,12 +139,20 @@ export const workflowAnalyticsService = {
                             const name = (lastStep.ActivityName || lastStep.Name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
                             const type = (lastStep.ActivityType || '').toLowerCase();
                             
-                            if (
+                            const isTaskEnd = 
                                 type.includes('end') || type.includes('fim') ||
                                 name === 'end' || name.startsWith('end ') || name.endsWith(' end') || name.includes(' end ') ||
                                 name.startsWith('fim') || name.includes(' fim') ||
-                                name.includes('concluid') || name.includes('termin') || name.includes('conclusao') ||
-                                name.includes('cancelad') || name.includes('reprovad')
+                                name.includes('concluid') || name.includes('termin') || name.includes('conclusao');
+                                
+                            const rejKw = ['recus', 'cancel', 'reprov', 'rejeit', 'refuse', 'reject'];
+                            const isRejected = rejKw.some(kw => name.includes(kw));
+
+                            if (
+                                latestInstance.Status === 2 || 
+                                latestInstance.Status === 'Completed' ||
+                                isTaskEnd || 
+                                isRejected
                             ) {
                                 isFinished = true;
                             }
