@@ -6,8 +6,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import pdfParse from 'pdf-parse';
 import OpenAI from 'openai';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
